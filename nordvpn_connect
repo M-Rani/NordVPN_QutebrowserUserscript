@@ -9,12 +9,13 @@ SEL=$(echo "CONNECT\nSTATUS\nLOOP\nDISCONNECT" | dmenu -i -no-custom | tr -d '\n
   [[ $COUNTRY ]] && {
     TG_CITY=$(echo $(nordvpn cities $COUNTRY) | xargs | sed 's/ /\n/g' | tr -d ',-' | sed '/^[[:space:]]*$/d' | cat | dmenu -i -no-custom)
   } || {
-    exit 1  
+    echo "NordVPN failed to connect"
+    exit 0 
   }
   
   # Connect or switch current VPN server
   nordvpn connect $TG_CITY
-  echo "NordVPN Connected to $COUNTRY"
+  echo "NordVPN Connected to $COUNTRY $TG_CITY"
 } 
 
 [[ $SEL == "STATUS" ]] && {
@@ -24,31 +25,23 @@ SEL=$(echo "CONNECT\nSTATUS\nLOOP\nDISCONNECT" | dmenu -i -no-custom | tr -d '\n
   
   # Append Looping attribute if script is running
   [[ $(pgrep nordvpn_loop) ]] && {
-    LOOP_STAT="(Looping)"
-    echo "$STAT\nLooping: True"
+    LOOP_STAT="Looping: True"
+    echo "$STAT\n$LOOP_STAT"
   } || {
     LOOP_STAT=""
-    echo "$STAT\nLooping: False"
+    echo "$STAT\n$LOOP_STAT"
   }
-  # notify-send --icon="nordvpn.png" --app-name="NordVPN-CLI" --urgency="normal"\
-  #   -t 5000 "NordVPN $LOOP_STAT" "$STAT"
 } 
 
 [[ $SEL == "LOOP" ]] && {
   # Start NordVPN Loop 
   # reset every xx minutes
-  STAT=$(nordvpn status)
   
   # Runs nordvpn_loop if not already running
   [[ $(pgrep nordvpn_loop) ]] && {
-    LOOP_STAT="(Looping)"
     echo "NordVPN is already looping"
-    # notify-send --icon="nordvpn.png" --app-name="NordVPN-CLI" --urgency="normal"\
-    #   -t 5000 "NordVPN" "VPN is already looping"
   } || {
-    echo "NordVPN Loop Started"
-    # notify-send --icon="nordvpn.png" --app-name="NordVPN-CLI" --urgency="normal"\
-    #   -t 5000 "NordVPN" "VPN loop Started" 
+    echo "Loop Started"
     
     # Run Loop script as a seperate process and exit
     (exec /home/alex/.config/qutebrowser/userscripts/nordvpn_loop)
@@ -61,7 +54,7 @@ SEL=$(echo "CONNECT\nSTATUS\nLOOP\nDISCONNECT" | dmenu -i -no-custom | tr -d '\n
 
   # Disconnect user from VPN session if connected
   nordvpn disconnect
-  echo "\bNordVPN Disconnected"
+  echo "NordVPN Disconnected" | tr -d '-'
 }
 
 exit 0 
