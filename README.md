@@ -1,2 +1,4 @@
 # NordVPN_QutebrowserUserscript
-A userscript meant to be used alongside Rofi's Dmenu option, and NordVPN
+A qutebrowser userscript meant to be used alongside Rofi's dmenu option, and NordVPN
+
+best called with qutebrowser's "spawn -mu" command
