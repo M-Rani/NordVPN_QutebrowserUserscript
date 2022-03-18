@@ -1,0 +1,31 @@
+#!/usr/bin/zsh
+
+# initialize counter
+i=0
+
+# Generate a random value betweeo 60-90
+RAND=$(date +%s%N | cut -b10-19)
+TIME=$((RAND % 30 + 0))
+CHNG=$((TIME + 60))
+
+while : ; do
+  #variables
+  getNORD=$(pgrep nordvpnd)
+  getTIME=$(date +"%T")
+  getNEWT=$(date -d "today + $CHNG minutes" +"%T")
+  
+  #nordvpn - every 30 minutes switch locations
+  if [ $((i%2)) -eq 0 ]
+  then
+    nordvpn connect uk
+  else
+    nordvpn connect de
+  fi
+
+  notify-send --icon="nordvpn.png" --app-name="NordVPN-CLI" --urgency="normal"\
+    -t 12250 "Connection Status: $getNORD" "Connected at $getTIME\nReconnect at $getNEWT" 
+
+  #increment counter
+  (( i = 1 + i ))
+  sleep $((CHNG * 60)) 
+done

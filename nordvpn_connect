@@ -1,0 +1,67 @@
+#!/usr/bin/zsh
+
+# On function call, call dmenu
+SEL=$(echo "CONNECT\nSTATUS\nLOOP\nDISCONNECT" | dmenu -i -no-custom | tr -d '\n' | xargs)
+
+[[ $SEL == "CONNECT" ]] && {
+  # Pick VPN Server
+  COUNTRY=$(echo $(nordvpn countries) | xargs | sed 's/ /\n/g' | tr -d ',-' | sed '/^[[:space:]]*$/d' | cat | dmenu -i -no-custom)
+  [[ $COUNTRY ]] && {
+    TG_CITY=$(echo $(nordvpn cities $COUNTRY) | xargs | sed 's/ /\n/g' | tr -d ',-' | sed '/^[[:space:]]*$/d' | cat | dmenu -i -no-custom)
+  } || {
+    exit 1  
+  }
+  
+  # Connect or switch current VPN server
+  nordvpn connect $TG_CITY
+  echo "NordVPN Connected to $COUNTRY"
+} 
+
+[[ $SEL == "STATUS" ]] && {
+  # Check current status of connect if connected
+  # Display with notify-send
+  STAT=$(nordvpn status | tr -d '-')
+  
+  # Append Looping attribute if script is running
+  [[ $(pgrep nordvpn_loop) ]] && {
+    LOOP_STAT="(Looping)"
+    echo "$STAT\nLooping: True"
+  } || {
+    LOOP_STAT=""
+    echo "$STAT\nLooping: False"
+  }
+  # notify-send --icon="nordvpn.png" --app-name="NordVPN-CLI" --urgency="normal"\
+  #   -t 5000 "NordVPN $LOOP_STAT" "$STAT"
+} 
+
+[[ $SEL == "LOOP" ]] && {
+  # Start NordVPN Loop 
+  # reset every xx minutes
+  STAT=$(nordvpn status)
+  
+  # Runs nordvpn_loop if not already running
+  [[ $(pgrep nordvpn_loop) ]] && {
+    LOOP_STAT="(Looping)"
+    echo "NordVPN is already looping"
+    # notify-send --icon="nordvpn.png" --app-name="NordVPN-CLI" --urgency="normal"\
+    #   -t 5000 "NordVPN" "VPN is already looping"
+  } || {
+    echo "NordVPN Loop Started"
+    # notify-send --icon="nordvpn.png" --app-name="NordVPN-CLI" --urgency="normal"\
+    #   -t 5000 "NordVPN" "VPN loop Started" 
+    
+    # Run Loop script as a seperate process and exit
+    (exec /home/alex/.config/qutebrowser/userscripts/nordvpn_loop)
+  }
+}
+
+[[ $SEL == "DISCONNECT" ]] && {
+  # Kill nordvpn_loop
+  pkill nordvpn_loop
+
+  # Disconnect user from VPN session if connected
+  nordvpn disconnect
+  echo "\bNordVPN Disconnected"
+}
+
+exit 0 
