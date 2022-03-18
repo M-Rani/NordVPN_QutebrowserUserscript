@@ -1,30 +1,43 @@
 #!/usr/bin/zsh
 
-# initialize counter
+# init counter
 i=0
 
-# Generate a random value betweeo 60-90
-RAND=$(date +%s%N | cut -b10-19)
-TIME=$((RAND % 30 + 0))
-CHNG=$((TIME + 60))
-
 while : ; do
+  # Generate a random value between 60-90
+  # less pseudo-random
+  RAND=$(date +%s%N | cut -b10-19)
+  TIME=$((RAND % 30 + 0))
+  CHNG=$((TIME + 60))
+
   #variables
   getNORD=$(pgrep nordvpnd)
   getTIME=$(date +"%T")
   getNEWT=$(date -d "today + $CHNG minutes" +"%T")
   
-  #nordvpn - every 30 minutes switch locations
-  if [ $((i%2)) -eq 0 ]
-  then
-    nordvpn connect uk
-  else
-    nordvpn connect de
-  fi
+  # Generate a number between 1-10
+  # pseudo-random
+  PICK=$(shuf -i 0-10 -n 1)
+  case $PICK in 
+   0) nordvpn connect Mexico ;;
+   1) nordvpn connect Canada ;;
+   2) nordvpn connect Germany ;;
+   3) nordvpn connect Netherlands ;;
+   4) nordvpn connect Norway ;;
+   5) nordvpn connect Sweden ;;
+   6) nordvpn connect Ukraine ;;
+   7) nordvpn connect United_Kingdom ;;
+   8) nordvpn connect United_States ;;
+   9) nordvpn connect Denmark ;;
+  10) nordvpn connect Japan ;;
+  esac
 
-  notify-send --icon="nordvpn.png" --app-name="NordVPN-CLI" --urgency="normal"\
-    -t 12250 "Connection Status: $getNORD" "Connected at $getTIME\nReconnect at $getNEWT" 
+  # Connection Status: $getNORD
+  # notify-send --icon="nordvpn.png" --urgency="normal"\
+  #   -t 12250 "NordVPN (t-$((CHNG))m)" "Connected at $getTIME\nReconnect at $getNEWT" 
 
+  echo "NordVPN (t-$((CHNG))m)\nConnected at $getTIME\nReconnect at $getNEWT" 
+  
   #increment counter
   (( i = 1 + i ))
   sleep $((CHNG * 60)) 
